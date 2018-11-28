@@ -1,0 +1,21 @@
+const WEBHOOK_URI = `${YOUR WEBHOOK URI}`
+const ercAddress = "0x618b994b997C78eE9d6743bbd2215fa92Ab32D93"
+const kerasiosWalletAddress = "0xd11eeF5B2DB260528B612686aba476a1A05230ed"
+const addrMapperAddress = "0xB4A41538Fbb62433c0CCCA04Aa4B22b52bC09A0e"
+// almost # of blocks that corresponsds to 24 hours
+const safeFromBlockGuard = 6000;
+const safeFromBlockGuard30Days = safeFromBlockGuard * 30;
+// minimum confirmation number
+const minConfNumb = 12;
+const GetNullTrxErrorCountThresh = 5;
+
+module.exports = {
+  WEBHOOK_URI,
+  ercAddress,
+  safeFromBlockGuard,
+  safeFromBlockGuard30Days,
+  minConfNumb,
+  GetNullTrxErrorCountThresh,
+  kerasiosWalletAddress,
+  addrMapperAddress
+};
