@@ -29,6 +29,11 @@ db.settings(settings);
 
 
 const coinMultiplier = new BN(10).pow(new BN(18))
+const sleep = (ms) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, ms)
+    })
+}
 program
   .command('withdraw <fromAccount> <to> <amount>')
   .description('withdraw with specific amount')
@@ -38,12 +43,14 @@ program
     if(unit == null) {
         unit = 'wei'
     }
-    assert(web3Http.utils.isAddress(to), "eth address must be valid!")
 
     // fromAccount validation check
     let myAccountDoc = await db.collection('balances').doc(fromAccount).get()
     if(!myAccountDoc.exists) {
-        console.log(`balances/{fromAccount} does not exist!`)
+        let errMsg = `balances/${fromAccount} does not exist!`
+        console.log(errMsg)
+        slackNoti(errMsg)
+        await sleep(5000)
         process.exit(1)
     }
     ///
@@ -53,30 +60,39 @@ program
     try {
         modiAmount = web3Http.utils.toWei(amount, unit)
     } catch(e) {
-        console.log("fromWei fail!")
-        console.log(e.toString())
-        program.exit(1)
+        let errMsg = `fromWei fail! ${e.toString()}`
+        console.log(errMsg)
+        slackNoti(errMsg)
+        await sleep(5000)
+        process.exit(1)
     }
-    
+
+    if(!web3Http.utils.isAddress(toAddr)) {
+        let errMsg = `toAddr: ${toAddr} address is invalid!`
+        console.log(errMsg)
+        slackNoti(errMsg)
+        await sleep(5000)
+        process.exit(1)
+    }
+
     console.log("Processing...")
-    // db.collection('withdrawEvent')
     const balanceDocRef = db.collection('balances').doc(fromAccount)
     const withdrawEventRef = db.collection('withdrawEvent')
     try {
         await db.runTransaction(trans => {
             return trans.get(balanceDocRef).then(doc => {
                 if(!doc.exists || doc.data() == null || doc.data().lock == null) {
-                    let rejectMsg = `${toAddr}: cannot read balanceDocRef or lock field does not exist!`
+                    let rejectMsg = `${fromAccount}: ${toAddr}: ${modiAmount}: cannot read balanceDocRef or lock field does not exist!`
                     return Promise.reject(rejectMsg)
                 }
                 if(doc.data().lock === true) {
-                    let rejectMsg = `${toAddr}: current lock is true!`
+                    let rejectMsg = `${fromAccount}: ${toAddr}: ${modiAmount}: current lock is true!`
                     return Promise.reject(rejectMsg)
                 }
                 let oldValue = new BN(doc.data().value)
                 let newValue = oldValue.sub(new BN(modiAmount))
                 if(newValue.isNeg()) {
-                    let rejectMsg = `${toAddr}: newValue is negative!`
+                    let rejectMsg = `${fromAccount}: ${toAddr}: ${modiAmount}: newValue is negative!`
                     return Promise.reject(rejectMsg)
                 } else {
 
@@ -98,6 +114,8 @@ program
         const errMsg = `in withdraw.js, transaction error ${e.toString()}`
         slackNoti(errMsg)
         console.log(errMsg)
+        await sleep(5000)
+        process.exit(1)
     }
     console.log('done!')
     
