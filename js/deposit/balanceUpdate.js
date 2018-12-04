@@ -59,7 +59,6 @@ const main = async () => {
                         let account = null;
                         try {
                             account = await getRegisteredAccount(addressMapper, fromAddr)
-                            account = account.toLowerCase()
                         } catch(e) {
                             slackNoti(`in balanceUpdate.js, txhash(${docKey}) getRegisteredAccount fail! ${e.toString()}`)
                             return;

@@ -64,27 +64,46 @@ const main = async () => {
                             gasPrice: '15000000000',
                             gas: '600000'
                         })
-                        
-                        try {
-                            await db.runTransaction(trans => {
-                                return trans.get(hDocRef).then(doc => {
-                                    let newStatus = 'waitForLog'
-                                    trans.update(hDocRef, {
-                                        status: newStatus
-                                    })
-                                })
-                            })
-                        } catch(e) {
-                            let errMsg = `in withdrawTxTrigger.js, transaction error! ${docKey}: ${e.toString()}`
+                        .then(async receipt => {
+                             
+                        })
+                        .catch(e => {
+                            let errMsg = `in withdrawTxTrigger.js, walletContract submitTransaction error! ${docKey}: ${e.toString()}`
                             slackNoti(errMsg)
                             console.log(errMsg)
-                        }    
+                        })
+
+                        // important part!!! it must not fail!
+                        const sleep = (ms) => {
+                            return new Promise((resolve, reject) => {
+                                setTimeout(resolve, ms)
+                            })
+                        }
+                        let retries = 5
+                        let success = false
+                        while(retries-- > 0 && success === false) {
+                            try {
+                                await db.runTransaction(trans => {
+                                    return trans.get(hDocRef).then(doc => {
+                                        let newStatus = 'waitForLog'
+                                        trans.update(hDocRef, {
+                                            status: newStatus
+                                        })
+                                    })
+                                })
+                                success = true
+                            } catch(e) {
+                                let errMsg = `in withdrawTxTrigger.js, transaction error retry#${retries}! ${docKey}: ${e.toString()}`
+                                slackNoti(errMsg)
+                                console.log(errMsg)
+                            }
+                            await sleep(2000)
+                        }
+                        ///
                     }
-                    
                 } else {
 
                 }
-                
             })
         })
         .catch(e => {
@@ -94,7 +113,7 @@ const main = async () => {
         
         
     }
-    const mainInterval = setInterval(intervalFunc, 1000*30)
+    const mainInterval = setInterval(intervalFunc, 1000*120)
     // intervalFunc()
     // const mainInterval = setInterval(intervalFunc, 1000*15)
 }
