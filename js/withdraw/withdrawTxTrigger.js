@@ -79,7 +79,7 @@ const main = async () => {
                                 setTimeout(resolve, ms)
                             })
                         }
-                        let retries = 5
+                        let retries = 3
                         let success = false
                         while(retries-- > 0 && success === false) {
                             try {
@@ -96,8 +96,12 @@ const main = async () => {
                                 let errMsg = `in withdrawTxTrigger.js, transaction error retry#${retries}! ${docKey}: ${e.toString()}`
                                 slackNoti(errMsg)
                                 console.log(errMsg)
+                                if(retries === 0) {
+                                    console.log("Emergency!!! process exit with code 1!")
+                                    process.exit(1)
+                                }
                             }
-                            await sleep(2000)
+                            await sleep(1000)
                         }
                         ///
                     }
