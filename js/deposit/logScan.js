@@ -77,7 +77,9 @@ const putLogs = (db, events, timeout) => {
                         status: 'unconfirmed',
                         GetNullTrxErrorCount: 0,
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                        ...eventObject
+                        ...eventObject,
+                        tokenAmount: (new BN(eventObject.data.slice(2), 16)).toString(),
+                        fromAddr: '0x' + eventObject.topics[1].slice(26)
                     }, { merge: true })
                     .then(transDoneFunc)
                     .catch(err => {
@@ -149,6 +151,7 @@ const main = async () => {
         console.log(`date: ${new Date()}`)
         console.log(`lastConfirmedSafeCommit: ${lastConfirmedSafeCommit}`)
         console.log('events length: ', events.length)
+        // console.log(events)
         console.log("")        
         ///
     }
