@@ -70,6 +70,7 @@ const main = async () => {
                             await db.runTransaction(trans => {
                                 return trans.get(balanceDocRef).then(async doc => {
                                     let newValue = null;
+                                    let oldValue = null;
                                     if(!doc.exists) {
                                         newValue = tokenAmount
                                         trans.set(balanceDocRef, {
@@ -78,7 +79,7 @@ const main = async () => {
                                             fromAddrs: [fromAddr]
                                         })
                                     } else {
-                                        let oldValue = new BN(doc.data().value)
+                                        oldValue = new BN(doc.data().value)
                                         newValue = oldValue.add(tokenAmount)
                                         let oldFromAddrs = doc.data().fromAddrs;
                                         let newFromAddrs = oldFromAddrs.slice()
@@ -92,8 +93,10 @@ const main = async () => {
                                             fromAddrs: newFromAddrs
                                         })
                                     }
+                                    if(oldValue == null) oldValue = new BN(0)
                                     trans.update(depositDocRef, {
-                                        status: 'deposited'
+                                        status: 'deposited',
+                                        prevAllBalance: oldValue.toString()
                                     })
                                 })
                             })
