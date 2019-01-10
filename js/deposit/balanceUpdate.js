@@ -74,13 +74,22 @@ const main = async () => {
                                         newValue = tokenAmount
                                         trans.set(balanceDocRef, {
                                             value: newValue.toString(),
-                                            lock: false
+                                            lock: false,
+                                            fromAddrs: [fromAddr]
                                         })
                                     } else {
                                         let oldValue = new BN(doc.data().value)
                                         newValue = oldValue.add(tokenAmount)
+                                        let oldFromAddrs = doc.data().fromAddrs;
+                                        let newFromAddrs = oldFromAddrs.slice()
+                                        if((new Set(oldFromAddrs)).has(fromAddr)) {
+
+                                        } else {
+                                            newFromAddrs.push(fromAddr)
+                                        }
                                         trans.update(balanceDocRef, {
-                                            value: newValue.toString()
+                                            value: newValue.toString(),
+                                            fromAddrs: newFromAddrs
                                         })
                                     }
                                     trans.update(depositDocRef, {
