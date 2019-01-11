@@ -106,7 +106,8 @@ program
                     fromAccount: fromAccount,
                     amount: modiAmount,
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                    status: 'unconfirmed'
+                    status: 'unconfirmed',
+                    prevAllBalance: oldValue.toString()
                 })
             })
         })

@@ -45,7 +45,7 @@ const getTransferEvents = async (web3, fromBlock, ercAddress, walletAddress, aut
 const main = async () => {
     const intervalFunc = async () => {
         let currentBlock = await web3Http.eth.getBlockNumber();
-
+        const lockDocRef = db.collection('vars').doc('keraWallet_lock')
         db.collection("withdrawEvent").where("status", '==', "waitForLog").get()
         .then(snap => {
             snap.forEach(async doc => {
@@ -91,6 +91,9 @@ const main = async () => {
                                         })
                                         trans.update(balanceDocRef, {
                                             lock: false
+                                        })
+                                        trans.update(lockDocRef, {
+                                            bool: false
                                         })
                                     }
                                 })
