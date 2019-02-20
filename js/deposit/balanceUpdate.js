@@ -117,7 +117,7 @@ const main = async () => {
                                     })
                                 })
                             })
-                            // send noti email
+                            // send noti email, socketio emit
                             User.findById(account, (err, user) => {
                                 if(err) {
                                     let errMsg = `mongo findById(${account}) fails in balanceUpdate(depo). ${err.toString()}`
@@ -133,11 +133,11 @@ const main = async () => {
                                             slackNoti(errMsg)
                                         })
                                     }
+                                    if(user.isNotiWebDeposit) {
+                                        io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                                    }
                                 }
                             })
-                            ///
-                            // socketio emit
-                            io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
                             ///
                             // lastConfirmedSafeCommit
                             const hBlockNumber = doc.data().blockNumber;
