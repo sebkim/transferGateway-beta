@@ -16,6 +16,12 @@ const User = mongoose.model('users')
 const Mailer = require('../services/Mailer');
 const notiTemplate = require('../services/emailTemplates/notiTemplate');
 
+// socketio
+const express = require('express');
+const app = express()
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+
 const getSlackNoti = require('../shared').getSlackNoti
 const slackNoti = getSlackNoti()
 
@@ -130,6 +136,9 @@ const main = async () => {
                                 }
                             })
                             ///
+                            // socketio emit
+                            io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                            ///
                             // lastConfirmedSafeCommit
                             const hBlockNumber = doc.data().blockNumber;
                             if(hBlockNumber == null) {
@@ -178,3 +187,7 @@ const main = async () => {
 }
 
 main()
+
+http.listen(5006, function(){
+    console.log('listening on *:5006');
+});
