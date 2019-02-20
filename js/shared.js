@@ -18,6 +18,11 @@ const getSlackNoti = () => {
     return slackNoti;
 }
 
+const httpType = "http"
+const gqImageUrl = "https://s3.ap-northeast-2.amazonaws.com/kera-test/global/GQ-64px.png"
+
 module.exports = {
-    getSlackNoti
+    getSlackNoti,
+    httpType,
+    gqImageUrl
 }

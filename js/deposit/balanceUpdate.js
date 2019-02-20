@@ -5,6 +5,17 @@ const BN = require('bn.js')
 const web3Http = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/G6jiWFDK2hiEfZVJG8w1'))
 const CONST = require('../constants');
 
+// mongo
+const mongoose = require('mongoose');
+require('../models/User');
+mongoose.Promise = global.Promise;
+mongoose.connect(`mongodb://${CONST.MONGO_USER}:${CONST.MONGO_PASS}@${CONST.MONGO_URI}`, {useNewUrlParser: true});
+const User = mongoose.model('users')
+
+// sendgrid
+const Mailer = require('../services/Mailer');
+const notiTemplate = require('../services/emailTemplates/notiTemplate');
+
 const getSlackNoti = require('../shared').getSlackNoti
 const slackNoti = getSlackNoti()
 
@@ -100,6 +111,25 @@ const main = async () => {
                                     })
                                 })
                             })
+                            // send noti email
+                            User.findById(account, (err, user) => {
+                                if(err) {
+                                    let errMsg = `mongo findById(${account}) fails in balanceUpdate(depo). ${err.toString()}`
+                                    slackNoti(errMsg)
+                                } else {
+                                    if(user.isNotiEmailDeposit) {
+                                        const email = user.email
+                                        const content = `Deposit ${tokenAmount.toString()} is completed.`
+                                        const mailer = new Mailer({ subject: 'Deposit transaction went successful.', recipients: [email] }, notiTemplate(email, content))
+                                        mailer.send()
+                                        .catch(e => {
+                                            let errMsg = `sendgrid (${account}) fails in balanceUpdate(depo). ${e.toString()}`
+                                            slackNoti(errMsg)
+                                        })
+                                    }
+                                }
+                            })
+                            ///
                             // lastConfirmedSafeCommit
                             const hBlockNumber = doc.data().blockNumber;
                             if(hBlockNumber == null) {

@@ -5,6 +5,17 @@ const BN = require('bn.js')
 const web3Http = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/G6jiWFDK2hiEfZVJG8w1'))
 const CONST = require('../constants');
 
+// mongo
+const mongoose = require('mongoose');
+require('../models/User');
+mongoose.Promise = global.Promise;
+mongoose.connect(`mongodb://${CONST.MONGO_USER}:${CONST.MONGO_PASS}@${CONST.MONGO_URI}`, {useNewUrlParser: true});
+const User = mongoose.model('users')
+
+// sendgrid
+const Mailer = require('../services/Mailer');
+const notiTemplate = require('../services/emailTemplates/notiTemplate');
+
 const getSlackNoti = require('../shared').getSlackNoti
 const slackNoti = getSlackNoti()
 
@@ -67,7 +78,7 @@ const main = async () => {
                         }
                         let event = events[0]
                         let eventObject = JSON.parse(JSON.stringify(event))
-                        let { toAddr, status: oldStatus, fromAccount } = doc.data()
+                        let { toAddr, status: oldStatus, fromAccount, amount } = doc.data()
                         if(oldStatus !== 'waitForLog') {
                             let errMsg = 'in withdrawLogScan.js, oldStatus of withdrawEvent should be waitForLog!'
                             slackNoti(errMsg)
@@ -98,6 +109,25 @@ const main = async () => {
                                     }
                                 })
                             })
+                            // send noti email
+                            User.findById(fromAccount, (err, user) => {
+                                if(err) {
+                                    let errMsg = `mongo findById(${fromAccount}) fails in withdrawLogScan. ${err.toString()}`
+                                    slackNoti(errMsg)
+                                } else {
+                                    if(user.isNotiEmailWithdraw) {
+                                        const email = user.email
+                                        const content = `Withdraw ${amount} is completed.`
+                                        const mailer = new Mailer({ subject: 'Withdraw transaction went successful.', recipients: [email] }, notiTemplate(email, content))
+                                        mailer.send()
+                                        .catch(e => {
+                                            let errMsg = `sendgrid (${fromAccount}) fails in withdrawLogScan. ${e.toString()}`
+                                            slackNoti(errMsg)
+                                        })
+                                    }
+                                }
+                            })
+                            ///
                         } catch(e) {
                             console.log(`in withdrawLogScan.js, ${e.toString()}`)
                         }
