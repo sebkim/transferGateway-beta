@@ -129,7 +129,7 @@ const main = async () => {
                                         const mailer = new Mailer({ subject: 'Deposit transaction went successful.', recipients: [email] }, notiTemplate(email, content))
                                         mailer.send()
                                         .catch(e => {
-                                            let errMsg = `sendgrid (${account}) fails in balanceUpdate(depo). ${e.toString()}`
+                                            let errMsg = `sendgrid (${email}) fails in balanceUpdate(depo). ${e.toString()}`
                                             slackNoti(errMsg)
                                         })
                                     }

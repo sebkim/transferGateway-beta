@@ -16,6 +16,12 @@ const User = mongoose.model('users')
 const Mailer = require('../services/Mailer');
 const notiTemplate = require('../services/emailTemplates/notiTemplate');
 
+// socketio
+const express = require('express');
+const app = express()
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+
 const getSlackNoti = require('../shared').getSlackNoti
 const slackNoti = getSlackNoti()
 
@@ -121,9 +127,12 @@ const main = async () => {
                                         const mailer = new Mailer({ subject: 'Withdraw transaction went successful.', recipients: [email] }, notiTemplate(email, content))
                                         mailer.send()
                                         .catch(e => {
-                                            let errMsg = `sendgrid (${fromAccount}) fails in withdrawLogScan. ${e.toString()}`
+                                            let errMsg = `sendgrid (${email}) fails in withdrawLogScan. ${e.toString()}`
                                             slackNoti(errMsg)
                                         })
+                                    }
+                                    if(user.isNotiWebWithdraw) {
+                                        io.of('keraWithdraw').emit(`${fromAccount}`, `${fromAccount}`, `${amount}`, `${toAddr}`)
                                     }
                                 }
                             })
@@ -147,3 +156,7 @@ const main = async () => {
 }
 
 main()
+
+http.listen(5007, function(){
+    console.log('listening on *:5007');
+});

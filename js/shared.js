@@ -21,8 +21,11 @@ const getSlackNoti = () => {
 const httpType = "http"
 const gqImageUrl = "https://s3.ap-northeast-2.amazonaws.com/kera-test/global/GQ-64px.png"
 
+const addressMapperAddr = "0xB4A41538Fbb62433c0CCCA04Aa4B22b52bC09A0e"
+
 module.exports = {
     getSlackNoti,
     httpType,
-    gqImageUrl
+    gqImageUrl,
+    addressMapperAddr
 }
