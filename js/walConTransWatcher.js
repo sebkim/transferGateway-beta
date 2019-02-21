@@ -7,6 +7,7 @@ const Web3 = require('web3');
 const BN = require('bn.js')
 const _ = require('lodash');
 const web3Http = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/G6jiWFDK2hiEfZVJG8w1'))
+const moment = require('moment');
 const CONST = require('./constants');
 
 // mongo
@@ -39,8 +40,8 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
-// const settings = {/* your settings... */ timestampsInSnapshots: true};
-// db.settings(settings);
+const settings = {/* your settings... */ timestampsInSnapshots: true};
+db.settings(settings);
 
 const getTransferEvents = async (web3, fromBlock, addressMapperAddr, ethAccount, uid) => {
     const keccakTopic = web3.utils.keccak256("DoMapAuto(address,bytes32,string)");
@@ -107,6 +108,25 @@ const main = () => {
     // intervalFunc()
     // const mainIterval = setInterval(intervalFunc, 1000 * 10)
 
+    // remove old unProcessed
+    const unconfirmIntervalFunc = async () => {
+        let nowD = moment().utc()
+        let dSomeAgo = moment(nowD)
+        dSomeAgo.subtract(2, 'hours')
+        // dSomeAgo.subtract(2, 'minutes')
+
+        db.collection(colName).where('status', '==', 'pending').where('createdAt', '<', dSomeAgo.toDate()).get()
+        .then(snap => {
+            snap.forEach(doc => {
+                let errMsg = `in walConTransWatcher.js (unconfirmIntervalFunc), ${nowD.toDate()}, uid(${doc.data().uid}), ethAccount(${doc.data().ethAccount}), pending too long!`
+                // slackNoti(errMsg)
+                console.error(errMsg)
+                db.collection(colName).doc(doc.id).delete()
+            })
+        })
+    }
+    const unconfirmInterval = setInterval(unconfirmIntervalFunc, 1000 * 60 * 60) // 1 hour
+    // unconfirmIntervalFunc()
 }
 main()
 
