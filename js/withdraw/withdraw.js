@@ -97,9 +97,17 @@ program
                 } else {
 
                 }
+                let oldRecent = doc.data().recentWithdrawAddrs
+                if(oldRecent == null) oldRecent = []
+                let newRecent = oldRecent.slice()
+                if((new Set(oldRecent)).has(toAddr)) {
+                } else {
+                    newRecent.push(toAddr)
+                }
                 trans.update(balanceDocRef, {
                     lock: true,
-                    value: newValue.toString()
+                    value: newValue.toString(),
+                    recentWithdrawAddrs: newRecent
                 })
                 trans.set(withdrawEventRef.doc(), {
                     toAddr: toAddr,
