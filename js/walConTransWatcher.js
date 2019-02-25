@@ -95,6 +95,33 @@ const main = () => {
                                 io.of('walConTrans').emit(`${uid}`, `${ethAccount}`)
                             }
                             db.collection(colName).doc(docId).delete()
+                            // balance fromAddrs add due to wallet connection
+                            const balanceDocRef = db.collection("balances").doc(uid)
+                            try {
+                                await db.runTransaction(trans => {
+                                    return trans.get(balanceDocRef).then(async doc => {
+                                        if(!doc.exists) {
+                                        } else {
+                                            let loweredEthAccount = ethAccount.toLowerCase()
+                                            let oldFromAddrs = doc.data().fromAddrs;
+                                            let newFromAddrs = oldFromAddrs.slice()
+                                            if((new Set(oldFromAddrs)).has(loweredEthAccount)) {
+    
+                                            } else {
+                                                newFromAddrs.push(loweredEthAccount)
+                                            }
+                                            trans.update(balanceDocRef, {
+                                                fromAddrs: newFromAddrs
+                                            })
+                                        }
+                                    })
+                                })
+                            } catch(e) {
+                                let errMsg = `in walConTransWatcher.js, fromAddrs update transaction error ${uid}, ${ethAccount}! ${e.toString()}`
+                                console.error(errMsg)
+                                slackNoti(errMsg)
+                            }
+                            ///
                         }
                     })
                 }
