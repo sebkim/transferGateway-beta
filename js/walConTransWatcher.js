@@ -76,7 +76,7 @@ const main = () => {
                 if(events == null || _.isEqual(events, [])) {
                     return
                 } else {
-                    User.findById(uid, (err, user) => {
+                    User.findById(uid, async (err, user) => {
                         if(err) {
                             let errMsg = `mongo findById(${uid}) fails in walConTransWatcher. ${err.toString()}`
                             slackNoti(errMsg)
