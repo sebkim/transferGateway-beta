@@ -68,7 +68,7 @@ const main = async () => {
                                     const encodedABI = tokenContract.methods.transferWithData(toAddr, amount, hData).encodeABI()
                                     walletContract.methods.submitTransaction(ercAddress, 0, encodedABI).send({
                                         from: accounts[0],
-                                        gasPrice: '15000000000',
+                                        gasPrice: '30000000000',
                                         gas: '600000'
                                     })
                                     .then(async receipt => {
