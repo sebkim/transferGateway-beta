@@ -158,10 +158,11 @@ const main = () => {
 main()
 
 io.on('connection', function (socket) {
-    socket.emit('immediate',{'some' : 'data'});  //never received in browser
+    socket.emit('immediate',{'some' : 'immediate'});  //never received in browser
     setTimeout(() => {
-        socket.emit('deferred',{'some' : 'some'}); //always received in browser
+        socket.emit('deferred',{'some' : 'deferred'}); //always received in browser
     },2000);
+    io.of('walConTrans').emit('dummy', { 'some': 'walConTrans' });
 });
 
 http.listen(5008, function(){
