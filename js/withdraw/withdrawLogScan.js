@@ -132,7 +132,8 @@ const main = async () => {
                                         })
                                     }
                                     if(user.isNotiWebWithdraw) {
-                                        io.of('keraWithdraw').emit(`${fromAccount}`, `${fromAccount}`, `${amount}`, `${toAddr}`)
+                                        // io.of('keraWithdraw').emit(`${fromAccount}`, `${fromAccount}`, `${amount}`, `${toAddr}`)
+                                        io.emit(`${fromAccount}`, `${fromAccount}`, `${amount}`, `${toAddr}`)
                                     }
                                 }
                             })

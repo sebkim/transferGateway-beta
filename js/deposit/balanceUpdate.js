@@ -134,7 +134,8 @@ const main = async () => {
                                         })
                                     }
                                     if(user.isNotiWebDeposit) {
-                                        io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                                        // io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                                        io.emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
                                     }
                                 }
                             })
