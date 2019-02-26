@@ -92,7 +92,8 @@ const main = () => {
                                 })
                             }
                             if(user.isNotiWebWalCon) {
-                                io.of('walConTrans').emit(`${uid}`, `${ethAccount}`)
+                                // io.of('walConTrans').emit(`${uid}`, `${ethAccount}`)
+                                io.emit(`${uid}`, `${ethAccount}`)
                             }
                             db.collection(colName).doc(docId).delete()
                             // balance fromAddrs add due to wallet connection
@@ -158,11 +159,7 @@ const main = () => {
 main()
 
 io.on('connection', function (socket) {
-    socket.emit('immediate',{'some' : 'immediate'});  //never received in browser
-    setTimeout(() => {
-        socket.emit('deferred',{'some' : 'deferred'}); //always received in browser
-    },2000);
-    io.of('walConTrans').emit('dummy', { 'some': 'walConTrans' });
+    
 });
 
 http.listen(5008, function(){
