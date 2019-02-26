@@ -157,6 +157,13 @@ const main = () => {
 }
 main()
 
+io.on('connection', function (socket) {
+    socket.emit('immediate',{'some' : 'data'});  //never received in browser
+    setTimeout(() => {
+        socket.emit('deferred',{'some' : 'some'}); //always received in browser
+    },1500);
+});
+
 http.listen(5008, function(){
     console.log('listening on *:5008');
 });
