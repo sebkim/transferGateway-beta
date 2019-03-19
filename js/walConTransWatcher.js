@@ -27,7 +27,8 @@ const app = express()
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-const getSlackNoti = require('./shared').getSlackNoti
+const shared = require('../shared')
+const { getSlackNoti, balanceFormatter } = shared
 const slackNoti = getSlackNoti()
 
 const { addressMapperAddr } = require('./shared')

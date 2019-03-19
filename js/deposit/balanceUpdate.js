@@ -22,7 +22,8 @@ const app = express()
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-const getSlackNoti = require('../shared').getSlackNoti
+const shared = require('../shared')
+const { getSlackNoti, balanceFormatter } = shared
 const slackNoti = getSlackNoti()
 
 // addressMapper contract
@@ -125,7 +126,7 @@ const main = async () => {
                                 } else {
                                     if(user.isNotiEmailDeposit) {
                                         const email = user.email
-                                        const content = `Deposit ${tokenAmount.toString()} is completed.`
+                                        const content = `Deposit ${balanceFormatter(tokenAmount.toString(), 2)} is completed.`
                                         const mailer = new Mailer({ subject: 'Deposit transaction went successful.', recipients: [email] }, notiTemplate(email, content))
                                         mailer.send()
                                         .catch(e => {

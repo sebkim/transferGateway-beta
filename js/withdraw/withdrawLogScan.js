@@ -22,7 +22,8 @@ const app = express()
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-const getSlackNoti = require('../shared').getSlackNoti
+const shared = require('../shared')
+const { getSlackNoti, balanceFormatter } = shared
 const slackNoti = getSlackNoti()
 
 const ercAddress = CONST.ercAddress
@@ -123,7 +124,7 @@ const main = async () => {
                                 } else {
                                     if(user.isNotiEmailWithdraw) {
                                         const email = user.email
-                                        const content = `Withdraw ${amount} is completed.`
+                                        const content = `Withdraw ${balanceFormatter(amount, 2)} is completed.`
                                         const mailer = new Mailer({ subject: 'Withdraw transaction went successful.', recipients: [email] }, notiTemplate(email, content))
                                         mailer.send()
                                         .catch(e => {
