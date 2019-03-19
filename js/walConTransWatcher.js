@@ -28,10 +28,8 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 const shared = require('../shared')
-const { getSlackNoti, balanceFormatter } = shared
+const { getSlackNoti, balanceFormatter, addressMapperAddr } = shared
 const slackNoti = getSlackNoti()
-
-const { addressMapperAddr } = require('./shared')
 
 const safeFromBlockGuard30Days = CONST.safeFromBlockGuard30Days
 
