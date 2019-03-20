@@ -6,9 +6,9 @@ const serviceAccount = require("../kerasiosdev-firebase-adminsdk-5k15q-bf25ba0ff
 const Web3 = require('web3');
 const BN = require('bn.js')
 const _ = require('lodash');
-const web3Http = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/G6jiWFDK2hiEfZVJG8w1'))
 const moment = require('moment');
 const CONST = require('./constants');
+const web3Http = new Web3(new Web3.providers.HttpProvider(`https://mainnet.infura.io/v3/${CONST.INFURA_KEY}`))
 
 // mongo
 const mongoose = require('mongoose');

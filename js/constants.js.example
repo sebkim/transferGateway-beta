@@ -1,4 +1,4 @@
-const WEBHOOK_URI = `${YOUR WEBHOOK URI}`
+const WEBHOOK_URI = `${YOUR_WEBHOOK_URI}`
 const ercAddress = "0x618b994b997C78eE9d6743bbd2215fa92Ab32D93"
 const kerasiosWalletAddress = "0xd11eeF5B2DB260528B612686aba476a1A05230ed"
 const addrMapperAddress = "0xB4A41538Fbb62433c0CCCA04Aa4B22b52bC09A0e"
@@ -9,6 +9,13 @@ const safeFromBlockGuard30Days = safeFromBlockGuard * 30;
 const minConfNumb = 12;
 const GetNullTrxErrorCountThresh = 5;
 
+const SG_API_KEY = `${YOUR_SENDGRID_API_KEY}`
+const MONGO_USER = `${YOUR_MONGO_USER}`
+const MONGO_PASS = `${YOUR_MONGO_PASS}`
+const MONGO_URI = `x.x.x.x/${db}?authSource=admin`
+
+const INFURA_KEY = `${YOUR_INFURA_KEY}`
+
 module.exports = {
   WEBHOOK_URI,
   ercAddress,
@@ -17,5 +24,10 @@ module.exports = {
   minConfNumb,
   GetNullTrxErrorCountThresh,
   kerasiosWalletAddress,
-  addrMapperAddress
+  addrMapperAddress,
+  SG_API_KEY,
+  MONGO_USER,
+  MONGO_PASS,
+  MONGO_URI,
+  INFURA_KEY
 };

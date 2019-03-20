@@ -17,7 +17,7 @@ const mnemonic = fs.readFileSync(path.resolve(__dirname, '../../mnemonic.txt'), 
 // provider
 const provider = new HDWalletProvider(
     mnemonic,
-    'https://mainnet.infura.io/G6jiWFDK2hiEfZVJG8w1',
+    `https://mainnet.infura.io/v3/${CONST.INFURA_KEY}`,
     0
 );
 const web3 = new Web3(provider)
