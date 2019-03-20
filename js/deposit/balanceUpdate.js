@@ -119,27 +119,29 @@ const main = async () => {
                                 })
                             })
                             // send noti email, socketio emit
-                            User.findById(account, (err, user) => {
-                                if(err) {
-                                    let errMsg = `mongo findById(${account}) fails in balanceUpdate(depo). ${err.toString()}`
-                                    slackNoti(errMsg)
-                                } else {
-                                    if(user.isNotiEmailDeposit) {
-                                        const email = user.email
-                                        const content = `Deposit ${balanceFormatter(tokenAmount.toString(), 2)} is completed.`
-                                        const mailer = new Mailer({ subject: 'Deposit transaction went successful.', recipients: [email] }, notiTemplate(email, content))
-                                        mailer.send()
-                                        .catch(e => {
-                                            let errMsg = `sendgrid (${email}) fails in balanceUpdate(depo). ${e.toString()}`
-                                            slackNoti(errMsg)
-                                        })
+                            if(account !== 'crowdsale') {
+                                User.findById(account, (err, user) => {
+                                    if(err) {
+                                        let errMsg = `mongo findById(${account}) fails in balanceUpdate(depo). ${err.toString()}`
+                                        slackNoti(errMsg)
+                                    } else {
+                                        if(user.isNotiEmailDeposit) {
+                                            const email = user.email
+                                            const content = `Deposit ${balanceFormatter(tokenAmount.toString(), 2)} is completed.`
+                                            const mailer = new Mailer({ subject: 'Deposit transaction went successful.', recipients: [email] }, notiTemplate(email, content))
+                                            mailer.send()
+                                            .catch(e => {
+                                                let errMsg = `sendgrid (${email}) fails in balanceUpdate(depo). ${e.toString()}`
+                                                slackNoti(errMsg)
+                                            })
+                                        }
+                                        if(user.isNotiWebDeposit) {
+                                            // io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                                            io.emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                                        }
                                     }
-                                    if(user.isNotiWebDeposit) {
-                                        // io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
-                                        io.emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
-                                    }
-                                }
-                            })
+                                })
+                            }
                             ///
                             // lastConfirmedSafeCommit
                             const hBlockNumber = doc.data().blockNumber;
