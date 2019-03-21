@@ -70,41 +70,66 @@ const main = async () => {
                 const varsDocRef = db.collection('vars').doc('lastConfirmedSafeCommit')
                 if(doc.exists) {
                     if(doc.data()) {
-                        const rawTokenAmount = doc.data().data
-                        const tokenAmount = new BN(rawTokenAmount.slice(2), 16)
-                        const rawTopics = doc.data().topics;
-                        const fromAddr = '0x' + rawTopics[1].slice(26)
-                        let account = null;
-                        try {
-                            account = await getRegisteredAccount(addressMapper, fromAddr)
-                        } catch(e) {
-                            slackNoti(`in balanceUpdate.js, txhash(${docKey}) getRegisteredAccount fail! ${e.toString()}`)
-                            return;
+
+                        let account = null
+                        let tokenAmount = null
+                        let balanceDocRef = null
+                        let fromAddr = null
+
+                        if(doc.data().optionalSubType == null) {
+                            const rawTokenAmount = doc.data().data
+                            tokenAmount = new BN(rawTokenAmount.slice(2), 16)
+                            const rawTopics = doc.data().topics;
+                            fromAddr = '0x' + rawTopics[1].slice(26)
+                            try {
+                                account = await getRegisteredAccount(addressMapper, fromAddr)
+                            } catch(e) {
+                                slackNoti(`in balanceUpdate.js, txhash(${docKey}) getRegisteredAccount fail! ${e.toString()}`)
+                                return;
+                            }
+                            balanceDocRef = db.collection("balances").doc(account)
+                            // console.log(`${docKey}: ${fromAddr}: ${account}: ${tokenAmount.toString()}`)
+                            // console.log("")
+                        } else if(doc.data().optionalSubType === 'crowdsaleAndDepo') {
+                            const rawData = doc.data().data
+                            tokenAmount = new BN(rawData.slice(2+64, 2+64+64), 16)
+                            const rawTopics = doc.data().topics;
+                            fromAddr = '0x' + rawTopics[1].slice(26)
+                            account = doc.data().gqUid
+                            balanceDocRef = db.collection("balances").doc(account)
+                        } else {
+                            // no op
+                            return
                         }
-                        const balanceDocRef = db.collection("balances").doc(account)
-                        console.log(`${docKey}: ${fromAddr}: ${account}: ${tokenAmount.toString()}`)
-                        console.log("")
+                        
+                        // do balanceUpdate
                         try {
                             await db.runTransaction(trans => {
-                                return trans.get(balanceDocRef).then(async doc => {
+                                return trans.get(balanceDocRef).then(async balanceDoc => {
                                     let newValue = null;
                                     let oldValue = null;
-                                    if(!doc.exists) {
+                                    if(!balanceDoc.exists) {
                                         newValue = tokenAmount
+                                        let whenNewFromAddr = []
+                                        if(doc.data().optionalSubType == null) {
+                                            whenNewFromAddr.push(fromAddr)
+                                        }
                                         trans.set(balanceDocRef, {
                                             value: newValue.toString(),
                                             lock: false,
-                                            fromAddrs: [fromAddr]
+                                            fromAddrs: whenNewFromAddr
                                         })
                                     } else {
-                                        oldValue = new BN(doc.data().value)
+                                        oldValue = new BN(balanceDoc.data().value)
                                         newValue = oldValue.add(tokenAmount)
-                                        let oldFromAddrs = doc.data().fromAddrs;
+                                        let oldFromAddrs = balanceDoc.data().fromAddrs;
                                         let newFromAddrs = oldFromAddrs.slice()
                                         if((new Set(oldFromAddrs)).has(fromAddr)) {
 
                                         } else {
-                                            newFromAddrs.push(fromAddr)
+                                            if(doc.data().optionalSubType == null) {
+                                                newFromAddrs.push(fromAddr)
+                                            }
                                         }
                                         trans.update(balanceDocRef, {
                                             value: newValue.toString(),
@@ -118,37 +143,44 @@ const main = async () => {
                                     })
                                 })
                             })
-                            // send noti email, socketio emit
-                            if(account !== 'crowdsale') {
-                                User.findById(account, (err, user) => {
-                                    if(err) {
-                                        let errMsg = `mongo findById(${account}) fails in balanceUpdate(depo). ${err.toString()}`
-                                        slackNoti(errMsg)
-                                    } else {
-                                        if(user.isNotiEmailDeposit) {
-                                            const email = user.email
-                                            const content = `Deposit ${balanceFormatter(tokenAmount.toString(), 2)} is completed.`
-                                            const mailer = new Mailer({ subject: 'Deposit transaction went successful.', recipients: [email] }, notiTemplate(email, content))
-                                            mailer.send()
-                                            .catch(e => {
-                                                let errMsg = `sendgrid (${email}) fails in balanceUpdate(depo). ${e.toString()}`
-                                                slackNoti(errMsg)
-                                            })
-                                        }
-                                        if(user.isNotiWebDeposit) {
-                                            // io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
-                                            io.emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
-                                        }
+                        } catch(e) {
+                            let errMsg = `in balanceUpdate.js, transaction error (${docKey})! ${e.toString()}`
+                            slackNoti(errMsg)
+                        }
+
+                        // send noti email, socketio emit
+                        if(account !== 'crowdsale') {
+                            User.findById(account, (err, user) => {
+                                if(err) {
+                                    let errMsg = `mongo findById(${account}) fails in balanceUpdate(depo). ${err.toString()}`
+                                    slackNoti(errMsg)
+                                } else {
+                                    if(user.isNotiEmailDeposit) {
+                                        const email = user.email
+                                        const content = `Deposit ${balanceFormatter(tokenAmount.toString(), 2)} is completed.`
+                                        const mailer = new Mailer({ subject: 'Deposit transaction went successful.', recipients: [email] }, notiTemplate(email, content))
+                                        mailer.send()
+                                        .catch(e => {
+                                            let errMsg = `sendgrid (${email}) fails in balanceUpdate(depo). ${e.toString()}`
+                                            slackNoti(errMsg)
+                                        })
                                     }
-                                })
-                            }
-                            ///
-                            // lastConfirmedSafeCommit
-                            const hBlockNumber = doc.data().blockNumber;
-                            if(hBlockNumber == null) {
-                                slackNoti(`txhash(${docKey}) blockNumber is null! Must check this log!`)
-                                return;
-                            }
+                                    if(user.isNotiWebDeposit) {
+                                        // io.of('keraDepo').emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                                        io.emit(`${account}`, `${account}`, `${tokenAmount.toString()}`)
+                                    }
+                                }
+                            })
+                        }
+                        ///
+
+                        // lastConfirmedSafeCommit
+                        const hBlockNumber = doc.data().blockNumber;
+                        if(hBlockNumber == null) {
+                            slackNoti(`txhash(${docKey}) blockNumber is null! Must check this log!`)
+                            return;
+                        }
+                        try {
                             await db.runTransaction(trans => {
                                 return trans.get(varsDocRef).then(doc => {
                                     let oldLastConfirmedSafeCommit
@@ -169,13 +201,11 @@ const main = async () => {
                                     })
                                 })
                             })
-                            ///
                         } catch(e) {
-                            let errMsg = `in balanceUpdate.js, transaction error (${docKey})! ${e.toString()}`
-                            console.log(errMsg)
+                            let errMsg = `in balanceUpdate.js(lastConfirmedSafeCommit), transaction error (${docKey})! ${e.toString()}`
                             slackNoti(errMsg)
                         }
-                        
+                        ///
                     }
                 }
             })
@@ -183,7 +213,6 @@ const main = async () => {
         .catch(e => {
             console.log(e)
         })
-        
         
     }
     const mainInterval = setInterval(intervalFunc, 1000*30)
