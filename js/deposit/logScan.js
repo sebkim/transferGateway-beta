@@ -1,8 +1,8 @@
 const admin = require("firebase-admin");
-const serviceAccount = require("../../kerasiosdev-firebase-adminsdk-5k15q-bf25ba0ffc.json");
+const CONST = require('../constants');
+const serviceAccount = require(`../../${CONST.ServiceAccountJSON}`);
 const Web3 = require('web3');
 const BN = require('bn.js')
-const CONST = require('../constants');
 const web3Http = new Web3(new Web3.providers.HttpProvider(`https://mainnet.infura.io/v3/${CONST.INFURA_KEY}`))
 
 const getSlackNoti = require('../shared').getSlackNoti
@@ -14,7 +14,7 @@ const safeFromBlockGuard = CONST.safeFromBlockGuard
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://kerasiosdev.firebaseio.com"
+    databaseURL: CONST.FbDatabaseURL
 });
 
 const db = admin.firestore();

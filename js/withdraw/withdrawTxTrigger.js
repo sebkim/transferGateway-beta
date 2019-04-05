@@ -1,13 +1,13 @@
 const admin = require("firebase-admin");
+const CONST = require('../constants');
 const HDWalletProvider = require('truffle-hdwallet-provider');
-const serviceAccount = require("../../kerasiosdev-firebase-adminsdk-5k15q-bf25ba0ffc.json");
+const serviceAccount = require(`../../${CONST.ServiceAccountJSON}`);
 const Web3 = require('web3');
 const BN = require('bn.js')
 const ERC20JSON = require("../../buildJSON/ERC20Capped.json")
 const KerasiosWalletJSON = require("../../buildJSON/KerasiosWallet.json")
 const fs = require('fs-extra');
 const path = require('path')
-const CONST = require('../constants');
 
 const getSlackNoti = require('../shared').getSlackNoti
 const slackNoti = getSlackNoti()
@@ -35,7 +35,7 @@ const safeFromBlockGuard = CONST.safeFromBlockGuard
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://kerasiosdev.firebaseio.com"
+    databaseURL: CONST.FbDatabaseURL
 });
 
 const db = admin.firestore();
